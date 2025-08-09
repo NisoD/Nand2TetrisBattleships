@@ -1,0 +1,38 @@
+class Main {
+    function void main() {
+        var Game game;
+        var char key;
+        var boolean quit;
+        
+        let quit = false;
+        while (~quit) {
+            // init and run game
+            do StartScreen.init();
+            let game = Game.new();
+            do game.run();
+            do game.dispose();
+            
+            // End Screen Pause
+            do Sys.wait(500);
+            
+            // Play Again
+            do Screen.clearScreen();
+            do Output.moveCursor(12, 25);
+            do Output.printString("Play again? (Y/N)");
+            
+            // input (Y or N)
+            let key = 0;
+            while ((~(key = 89)) & (~(key = 78))) {  // 89 = 'Y', 78 = 'N'
+                let key = Keyboard.keyPressed();
+                do Sys.wait(50);
+            }
+            let quit = (key = 78);  // End if N was pressed
+        }
+        
+        // Show exit message
+        do Screen.clearScreen();
+        do Output.moveCursor(12, 25);
+        do Output.printString("Thanks for playing!");
+        return;
+    }
+}

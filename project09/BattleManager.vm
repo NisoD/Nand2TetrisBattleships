@@ -1,0 +1,606 @@
+function BattleManager.new 0
+push constant 11
+call Memory.alloc 1
+pop pointer 0
+push argument 0
+pop this 0
+push argument 1
+pop this 1
+push argument 2
+pop this 2
+push argument 3
+pop this 3
+push argument 4
+pop this 4
+push argument 5
+pop this 5
+push argument 6
+pop this 6
+push argument 7
+pop this 7
+push constant 0
+pop this 8
+push this 4
+push this 5
+push this 7
+push this 1
+call TargetCursor.new 4
+pop this 9
+push this 6
+call ShotTracker.new 1
+pop this 10
+push pointer 0
+call BattleManager.initializeScreen 1
+pop temp 0
+push pointer 0
+return
+function BattleManager.initializeScreen 0
+push argument 0
+pop pointer 0
+call Screen.clearScreen 0
+pop temp 0
+push this 0
+push this 2
+push this 3
+call PlayerBoard.draw 3
+pop temp 0
+push this 1
+push this 4
+push this 5
+push constant 0
+call PCBoard.draw 4
+pop temp 0
+push constant 1
+push constant 5
+call Output.moveCursor 2
+pop temp 0
+push constant 46
+call String.new 1
+push constant 70
+call String.appendChar 2
+push constant 105
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 116
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 87
+call String.appendChar 2
+push constant 105
+call String.appendChar 2
+push constant 108
+call String.appendChar 2
+push constant 108
+call String.appendChar 2
+push constant 33
+call String.appendChar 2
+push constant 40
+call String.appendChar 2
+push constant 83
+call String.appendChar 2
+push constant 112
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 99
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 41
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 44
+call String.appendChar 2
+push constant 82
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 116
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 115
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 116
+call String.appendChar 2
+push constant 44
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 81
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 116
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 98
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+push constant 100
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 110
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push constant 3
+push constant 13
+call Output.moveCursor 2
+pop temp 0
+push constant 12
+call String.new 1
+push constant 80
+call String.appendChar 2
+push constant 108
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 121
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 66
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 100
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push constant 3
+push constant 43
+call Output.moveCursor 2
+pop temp 0
+push constant 14
+call String.new 1
+push constant 67
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 109
+call String.appendChar 2
+push constant 112
+call String.appendChar 2
+push constant 117
+call String.appendChar 2
+push constant 116
+call String.appendChar 2
+push constant 101
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 32
+call String.appendChar 2
+push constant 66
+call String.appendChar 2
+push constant 111
+call String.appendChar 2
+push constant 97
+call String.appendChar 2
+push constant 114
+call String.appendChar 2
+push constant 100
+call String.appendChar 2
+call Output.printString 1
+pop temp 0
+push constant 0
+return
+function BattleManager.handlePlayerTurn 4
+push argument 0
+pop pointer 0
+push constant 0
+pop local 3
+label WHILE_EXP0
+push local 3
+not
+push this 8
+not
+and
+not
+if-goto WHILE_END0
+push this 9
+call TargetCursor.update 1
+pop temp 0
+push this 9
+call TargetCursor.isActionPressed 1
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push this 9
+call TargetCursor.getRow 1
+pop local 0
+push this 9
+call TargetCursor.getCol 1
+pop local 1
+push pointer 0
+push local 0
+push local 1
+call BattleManager.isValidPlayerShot 3
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push this 1
+push local 0
+push local 1
+call PCBoard.receiveShot 3
+pop local 2
+push this 1
+push this 4
+push this 5
+push local 0
+push local 1
+push local 2
+call PCBoard.renderShot 6
+pop temp 0
+push this 10
+push local 0
+push local 1
+push local 2
+call ShotTracker.recordPlayerShot 4
+pop temp 0
+push constant 0
+not
+pop local 3
+push this 1
+call PCBoard.isGameOver 1
+pop this 8
+label IF_FALSE1
+label IF_FALSE0
+push this 9
+call TargetCursor.isQuitPressed 1
+if-goto IF_TRUE2
+goto IF_FALSE2
+label IF_TRUE2
+push constant 0
+not
+pop this 8
+label IF_FALSE2
+push constant 50
+call Sys.wait 1
+pop temp 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function BattleManager.isValidPlayerShot 0
+push argument 0
+pop pointer 0
+push this 1
+push argument 1
+push argument 2
+call PCBoard.isValidShot 3
+push this 10
+push argument 1
+push argument 2
+call ShotTracker.hasPlayerShot 3
+not
+and
+return
+function BattleManager.handleComputerTurn 6
+push argument 0
+pop pointer 0
+push pointer 0
+call BattleManager.generateAvailableShots 1
+pop local 3
+push pointer 0
+call BattleManager.getRemainingShots 1
+pop local 4
+push local 4
+push constant 0
+eq
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+not
+pop this 8
+push constant 0
+return
+label IF_FALSE0
+push constant 0
+push local 4
+push constant 1
+sub
+call Random.randRange 2
+pop local 5
+push local 5
+push constant 2
+call Math.multiply 2
+push local 3
+add
+pop pointer 1
+push that 0
+pop local 0
+push local 5
+push constant 2
+call Math.multiply 2
+push constant 1
+add
+push local 3
+add
+pop pointer 1
+push that 0
+pop local 1
+push this 0
+push local 0
+push local 1
+call PlayerBoard.receiveShot 3
+pop local 2
+push this 0
+push this 2
+push this 3
+push local 0
+push local 1
+push local 2
+call PlayerBoard.updateCell 6
+pop temp 0
+push this 10
+push local 0
+push local 1
+push local 2
+call ShotTracker.recordComputerShot 4
+pop temp 0
+push this 0
+call PlayerBoard.isGameOver 1
+pop this 8
+push local 3
+call Array.dispose 1
+pop temp 0
+push constant 200
+call Sys.wait 1
+pop temp 0
+push constant 0
+return
+function BattleManager.generateAvailableShots 5
+push argument 0
+pop pointer 0
+push pointer 0
+call BattleManager.getRemainingShots 1
+pop local 1
+push local 1
+push constant 2
+call Math.multiply 2
+call Array.new 1
+pop local 0
+push constant 0
+pop local 4
+push constant 0
+pop local 2
+label WHILE_EXP0
+push local 2
+push this 6
+lt
+not
+if-goto WHILE_END0
+push constant 0
+pop local 3
+label WHILE_EXP1
+push local 3
+push this 6
+lt
+not
+if-goto WHILE_END1
+push pointer 0
+push local 2
+push local 3
+call BattleManager.isValidComputerShot 3
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 4
+push constant 2
+call Math.multiply 2
+push local 0
+add
+push local 2
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 4
+push constant 2
+call Math.multiply 2
+push constant 1
+add
+push local 0
+add
+push local 3
+pop temp 0
+pop pointer 1
+push temp 0
+pop that 0
+push local 4
+push constant 1
+add
+pop local 4
+label IF_FALSE0
+push local 3
+push constant 1
+add
+pop local 3
+goto WHILE_EXP1
+label WHILE_END1
+push local 2
+push constant 1
+add
+pop local 2
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+return
+function BattleManager.getRemainingShots 3
+push argument 0
+pop pointer 0
+push constant 0
+pop local 0
+push constant 0
+pop local 1
+label WHILE_EXP0
+push local 1
+push this 6
+lt
+not
+if-goto WHILE_END0
+push constant 0
+pop local 2
+label WHILE_EXP1
+push local 2
+push this 6
+lt
+not
+if-goto WHILE_END1
+push pointer 0
+push local 1
+push local 2
+call BattleManager.isValidComputerShot 3
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push local 0
+push constant 1
+add
+pop local 0
+label IF_FALSE0
+push local 2
+push constant 1
+add
+pop local 2
+goto WHILE_EXP1
+label WHILE_END1
+push local 1
+push constant 1
+add
+pop local 1
+goto WHILE_EXP0
+label WHILE_END0
+push local 0
+return
+function BattleManager.isValidComputerShot 0
+push argument 0
+pop pointer 0
+push argument 1
+push constant 0
+lt
+push argument 2
+push constant 0
+lt
+or
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push constant 0
+return
+label IF_FALSE0
+push argument 1
+push this 6
+push constant 1
+sub
+gt
+push argument 2
+push this 6
+push constant 1
+sub
+gt
+or
+if-goto IF_TRUE1
+goto IF_FALSE1
+label IF_TRUE1
+push constant 0
+return
+label IF_FALSE1
+push this 10
+push argument 1
+push argument 2
+call ShotTracker.hasComputerShot 3
+not
+push this 0
+push argument 1
+push argument 2
+call PlayerBoard.isValidShot 3
+and
+return
+function BattleManager.run 1
+push argument 0
+pop pointer 0
+push constant 0
+not
+pop local 0
+label WHILE_EXP0
+push this 8
+not
+not
+if-goto WHILE_END0
+push local 0
+if-goto IF_TRUE0
+goto IF_FALSE0
+label IF_TRUE0
+push pointer 0
+call BattleManager.handlePlayerTurn 1
+pop temp 0
+goto IF_END0
+label IF_FALSE0
+push pointer 0
+call BattleManager.handleComputerTurn 1
+pop temp 0
+label IF_END0
+push local 0
+not
+pop local 0
+goto WHILE_EXP0
+label WHILE_END0
+push constant 0
+return
+function BattleManager.isGameOver 0
+push argument 0
+pop pointer 0
+push this 8
+return
+function BattleManager.dispose 0
+push argument 0
+pop pointer 0
+push this 9
+call TargetCursor.dispose 1
+pop temp 0
+push this 10
+call ShotTracker.dispose 1
+pop temp 0
+push pointer 0
+call Memory.deAlloc 1
+pop temp 0
+push constant 0
+return

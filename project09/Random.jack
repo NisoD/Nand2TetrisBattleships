@@ -1,0 +1,28 @@
+class Random {
+    static int seed;
+   
+    function void setSeed(int newSeed) {
+        let seed = Math.abs(newSeed);
+        return;
+    }
+   
+    function int rand() { // Numbers are from DINO game!
+        let seed = Utils.mod(Math.multiply(seed, 16807) + 1 & 32767, 32767);
+        return seed;
+    }
+   
+    function int randRange(int min, int max) {
+        var int range, result;
+       
+        if (max < min) { return Math.min(min, max); }
+       
+        let range = max - min + 1;
+        if (range < 1) { return min; }
+       
+        let result = Random.rand();
+        let result = Utils.mod(result, range);
+        let result = Math.min(min + result, max);
+       
+        return result;
+    }
+}

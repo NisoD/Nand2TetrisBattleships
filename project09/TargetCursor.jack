@@ -1,0 +1,111 @@
+// TargetCursor.jack
+class TargetCursor {
+    field int boardX, boardY, cellSize;
+    field int row, col;
+    field int lastX, lastY;
+    field boolean actionPressed, quitPressed;
+    field PCBoard computerBoard;
+    
+    constructor TargetCursor new(int bx, int by, int cs, PCBoard cb) {
+        let boardX = bx;
+        let boardY = by;
+        let cellSize = cs;
+        let row = 0;
+        let col = 0;
+        let lastX = -1;
+        let lastY = -1;
+        let actionPressed = false;
+        let quitPressed = false;
+        let computerBoard = cb;
+        return this;
+    }
+    
+    method void clearLastPosition() {
+        var int gridRow, gridCol;
+        if (lastX > -1) {
+            // calculate  grid pos
+            let gridRow = (lastY - boardY) / cellSize;
+            let gridCol = (lastX - boardX) / cellSize;
+            
+            // clear  cursor
+            do Screen.setColor(false);
+            do Screen.drawRectangle(
+                lastX + 5,
+                lastY + 5,
+                lastX + 15,
+                lastY + 15
+            );
+            
+            // redraw cell
+            do computerBoard.redrawCell(gridRow, gridCol, boardX, boardY);
+        }
+        return;
+    }
+    
+    method void reset() {
+        do clearLastPosition();
+        let row = 0;
+        let col = 0;
+        let lastX = -1;
+        let lastY = -1;
+        return;
+    }
+    
+    
+    method void update() {
+        var int key, x, y;
+        
+        let actionPressed = false;
+        let quitPressed = false;
+        
+        let key = Keyboard.keyPressed();
+        if (key > 0) {
+            if (key = 130) { if (col > 0) { let col = col - 1; } }       // Left
+            if (key = 132) { if (col < 9) { let col = col + 1; } }       // Right
+            if (key = 131) { if (row > 0) { let row = row - 1; } }       // Up
+            if (key = 133) { if (row < 9) { let row = row + 1; } }       // Down
+            
+            if (key = 82) { do reset(); }                                // r - move to 0,0
+        
+            if (key = 32) { let actionPressed = true; }                  // Space
+            if (key = 81) { let quitPressed = true; }                    // Q
+            
+            //  new cursor position
+            let x = boardX + (col * cellSize);
+            let y = boardY + (row * cellSize);
+            
+            // Clear previous  position ( Instead of Rerendring the whole board which i did at first)
+            do clearLastPosition();
+            
+            // Draw new  cursor
+            do Screen.setColor(true);
+            do Screen.drawRectangle(
+                x + 5,
+                y + 5,
+                x + 15,
+                y + 15
+            );
+            
+            // new position
+            let lastX = x;
+            let lastY = y;
+            
+            // wait to prevent problems with key spamming
+            while (key = Keyboard.keyPressed()) {
+                do Sys.wait(5);
+            }
+        }
+        return;
+    }
+
+    
+    method int getRow() { return row; }
+    method int getCol() { return col; }
+    method boolean isActionPressed() { return actionPressed; }
+    method boolean isQuitPressed() { return quitPressed; }
+    
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

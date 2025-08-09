@@ -1,0 +1,101 @@
+class ShipPreview {
+    static int PREVIEW_MARGIN;
+    static int PREVIEW_WIDTH;
+    
+    field int boardX, boardY, cellSize;
+    field int lastRow, lastCol, lastSize;
+    field boolean lastVertical;
+    field boolean isVisible;
+   
+    constructor ShipPreview new(int bx, int by, int cs) {
+        let PREVIEW_MARGIN = 5;
+        let PREVIEW_WIDTH = 10;
+        
+        let boardX = bx;
+        let boardY = by;
+        let cellSize = cs;
+        let lastRow = -1;
+        let lastCol = -1;
+        let lastSize = 0;
+        let lastVertical = false;
+        let isVisible = false;
+        return this;
+    }
+   
+    method boolean hasPreviewChanged(int row, int col, int size, boolean vertical) {
+        return ~((row = lastRow) & 
+                (col = lastCol) & 
+                (size = lastSize) & 
+                (vertical = lastVertical));
+    }
+
+    method void clearPreview() {
+        var int x, y;
+        
+        if (~isVisible) { return; }
+        
+        let x = boardX + (lastCol * cellSize);
+        let y = boardY + (lastRow * cellSize);
+        
+        do Screen.setColor(false);
+        if (lastVertical) {
+            do Screen.drawRectangle(
+                x + PREVIEW_MARGIN,
+                y + PREVIEW_MARGIN,
+                x + PREVIEW_MARGIN + PREVIEW_WIDTH,
+                y + (lastSize * cellSize) - PREVIEW_MARGIN
+            );
+        } else {
+            do Screen.drawRectangle(
+                x + PREVIEW_MARGIN,
+                y + PREVIEW_MARGIN,
+                x + (lastSize * cellSize) - PREVIEW_MARGIN,
+                y + PREVIEW_MARGIN + PREVIEW_WIDTH
+            );
+        }
+        let isVisible = false;
+        return;
+    }
+   
+    method void draw(int row, int col, int size, boolean vertical) {
+        var int x, y;
+        
+        if (~hasPreviewChanged(row, col, size, vertical)) {
+            return;
+        }
+        
+        do clearPreview();
+        
+        let x = boardX + (col * cellSize);
+        let y = boardY + (row * cellSize);
+        
+        do Screen.setColor(true);
+        if (vertical) {
+            do Screen.drawRectangle(
+                x + PREVIEW_MARGIN,
+                y + PREVIEW_MARGIN,
+                x + PREVIEW_MARGIN + PREVIEW_WIDTH,
+                y + (size * cellSize) - PREVIEW_MARGIN
+            );
+        } else {
+            do Screen.drawRectangle(
+                x + PREVIEW_MARGIN,
+                y + PREVIEW_MARGIN,
+                x + (size * cellSize) - PREVIEW_MARGIN,
+                y + PREVIEW_MARGIN + PREVIEW_WIDTH
+            );
+        }
+        
+        let lastRow = row;
+        let lastCol = col;
+        let lastSize = size;
+        let lastVertical = vertical;
+        let isVisible = true;
+        return;
+    }
+   
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+}

@@ -1,0 +1,379 @@
+class PlayerBoard {
+    static int BOARD_SIZE;
+    static int CELL_SIZE;
+    
+    field Array grid;
+    field Array ships;
+    field int shipsPlaced;
+    field int shipsRemaining;
+
+    constructor PlayerBoard new(int size, int cellSize) {
+        var int i;
+        let BOARD_SIZE = size;
+        let CELL_SIZE = cellSize;
+        let grid = createGrid();
+        let ships = Array.new(5);
+        let shipsPlaced = 0;
+        let shipsRemaining = 5;
+        
+        let i = 0;
+        while (i < 5) {
+            let ships[i] = null;
+            let i = i + 1;
+        }
+        return this;
+    }
+
+    method Array createGrid() {
+        var Array board;
+        var Array row;
+        var int i, j;
+
+        let board = Array.new(BOARD_SIZE);
+        let i = 0;
+        while (i < BOARD_SIZE) {
+            let row = Array.new(BOARD_SIZE);
+            let j = 0;
+            while (j < BOARD_SIZE) {
+                let row[j] = 0;
+                let j = j + 1;
+            }
+            let board[i] = row;
+            let i = i + 1;
+        }
+        return board;
+    }
+
+    method int getCell(int row, int col) {
+        var Array rowArray;
+        if ((row < 0) | (row > (BOARD_SIZE-1)) | (col < 0) | (col > (BOARD_SIZE-1))) {
+            return -1;
+        }
+        let rowArray = grid[row];
+        return rowArray[col];
+    }
+
+    method void setCell(int row, int col, int value) {
+        var Array rowArray;
+        if ((row < 0) | (row > (BOARD_SIZE-1)) | (col < 0) | (col > (BOARD_SIZE-1))) {
+            return;
+        }
+        let rowArray = grid[row];
+        let rowArray[col] = value;
+        return;
+    }
+
+    method boolean canPlaceShip(int row, int col, int length, int dir) {
+        var int i;
+        
+        if ((row < 0) | (col < 0) | (row > (BOARD_SIZE-1)) | (col > (BOARD_SIZE-1))) { 
+            return false; 
+        }
+        
+        if (dir = 0) {
+            if ((col + length) > BOARD_SIZE) { return false; }
+            
+            let i = 0;
+            while (i < length) {
+                if ((col + i) > (BOARD_SIZE-1)) { return false; }
+                if (~(getCell(row, col + i) = 0)) { return false; }
+                let i = i + 1;
+            }
+        } else {
+            if ((row + length) > BOARD_SIZE) { return false; }
+            
+            let i = 0;
+            while (i < length) {
+                if ((row + i) > (BOARD_SIZE-1)) { return false; }
+                if (~(getCell(row + i, col) = 0)) { return false; }
+                let i = i + 1;
+            }
+        }
+        return true;
+    }
+
+    method void actuallyPlaceShip(int row, int col, int length, int dir) {
+        var int i;
+        
+        if ((row < 0) | (col < 0) | (row > (BOARD_SIZE-1)) | (col > (BOARD_SIZE-1))) {
+            return;
+        }
+        
+        let i = 0;
+        while (i < length) {
+            if (dir = 0) {
+                if ((col + i) < BOARD_SIZE) {
+                    do setCell(row, col + i, 1);
+                }
+            } else {
+                if ((row + i) < BOARD_SIZE) {
+                    do setCell(row + i, col, 1);
+                }
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method boolean placeShip(int row, int col, int length, boolean vertical) {
+        var Array ship;
+        var int dir;
+        
+        if ((row < 0) | (col < 0) | (length < 1) | (shipsPlaced > 4)) {
+            return false;
+        }
+        if (~vertical) {
+            let dir = 0;
+        } 
+        else {
+            let dir = 1;}
+        
+        if (canPlaceShip(row, col, length, dir)) {
+            let ship = Array.new(4);
+            let ship[0] = row;
+            let ship[1] = col;
+            let ship[2] = length;
+            let ship[3] = dir;
+            
+            do actuallyPlaceShip(row, col, length, dir);
+            
+            let ships[shipsPlaced] = ship;
+            let shipsPlaced = shipsPlaced + 1;
+            return true;
+        }
+        return false;
+    }
+
+    method boolean isValidShot(int row, int col) {
+        var int cell;
+        let cell = getCell(row, col);
+        return (cell < 2);
+    }
+
+    method int receiveShot(int row, int col) {
+        var int cell;
+        let cell = getCell(row, col);
+
+        if (cell = 1) {
+            do setCell(row, col, 3);
+            if (isShipSunk(row, col)) {
+                let shipsRemaining = shipsRemaining - 1;
+                return 2;
+            }
+            return 1;
+        } else {
+            if (cell = 0) {
+                do setCell(row, col, 2);
+            }
+            return 0;
+        }
+    }
+
+    method boolean isShipSunk(int hitRow, int hitCol) {
+        var int i, j, shipRow, shipCol, shipLen, shipDir;
+        var Array ship;
+
+        let i = 0;
+        while (i < 5) {
+            let ship = ships[i];
+            let shipRow = ship[0];
+            let shipCol = ship[1];
+            let shipLen = ship[2];
+            let shipDir = ship[3];
+
+            if (shipDir = 0) {
+                if ((hitRow = shipRow) & (hitCol > (shipCol - 1)) & (hitCol < (shipCol + shipLen))) {
+                    let j = 0;
+                    while (j < shipLen) {
+                        if (~(getCell(shipRow, shipCol + j) = 3)) {
+                            return false;
+                        }
+                        let j = j + 1;
+                    }
+                    return true;
+                }
+            } else {
+                if ((hitCol = shipCol) & (hitRow > (shipRow - 1)) & (hitRow < (shipRow + shipLen))) {
+                    let j = 0;
+                    while (j < shipLen) {
+                        if (~(getCell(shipRow + j, shipCol) = 3)) {
+                            return false;
+                        }
+                        let j = j + 1;
+                    }
+                    return true;
+                }
+            }
+            let i = i + 1;
+        }
+        return false;
+    }
+
+    method void updateCell(int boardX, int boardY, int row, int col, int result) {
+        var int x, y, centerX, centerY;
+        
+        let x = boardX + (col * CELL_SIZE);
+        let y = boardY + (row * CELL_SIZE);
+        let centerX = x + (CELL_SIZE/2);
+        let centerY = y + (CELL_SIZE/2);
+        
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x + 1, y + 1, x + (CELL_SIZE-1), y + (CELL_SIZE-1));
+        
+        do Screen.setColor(true);
+        do Screen.drawLine(x, y, x + CELL_SIZE, y);
+        do Screen.drawLine(x, y + CELL_SIZE, x + CELL_SIZE, y + CELL_SIZE);
+        do Screen.drawLine(x, y, x, y + CELL_SIZE);
+        do Screen.drawLine(x + CELL_SIZE, y, x + CELL_SIZE, y + CELL_SIZE);
+        
+        if (result = 0) {
+            do Screen.drawCircle(centerX, centerY, 3);
+        }
+        if ((result = 1) | (result = 2)) {
+            do Screen.drawLine(x + 5, y + 5, x + 15, y + 15);
+            do Screen.drawLine(x + 15, y + 5, x + 5, y + 15);
+        }
+        return;
+    }
+
+    method void drawShip(int x, int y, int row, int col, int length, boolean vertical) {
+        var int i;
+        
+        do Screen.setColor(true);
+        let i = 0;
+        while (i < length) {
+            if (vertical) {
+                do Screen.drawRectangle(
+                    x + (col * CELL_SIZE) + 5,
+                    y + ((row + i) * CELL_SIZE) + 5,
+                    x + (col * CELL_SIZE) + 15,
+                    y + ((row + i) * CELL_SIZE) + 15
+                );
+            } else {
+                do Screen.drawRectangle(
+                    x + ((col + i) * CELL_SIZE) + 5,
+                    y + (row * CELL_SIZE) + 5,
+                    x + ((col + i) * CELL_SIZE) + 15,
+                    y + (row * CELL_SIZE) + 15
+                );
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method void draw(int x, int y) {
+        var int i, j, cell;
+
+        do Screen.setColor(true);
+        let i = 0;
+        while (i < (BOARD_SIZE + 1)) {
+            do Screen.drawLine(x, y + (i * CELL_SIZE), x + (BOARD_SIZE * CELL_SIZE), y + (i * CELL_SIZE));
+            do Screen.drawLine(x + (i * CELL_SIZE), y, x + (i * CELL_SIZE), y + (BOARD_SIZE * CELL_SIZE));
+            let i = i + 1;
+        }
+
+        let i = 0;
+        while (i < BOARD_SIZE) {
+            let j = 0;
+            while (j < BOARD_SIZE) {
+                let cell = getCell(i, j);
+                if (cell = 1) {
+                    do Screen.drawRectangle(
+                        x + (j * CELL_SIZE) + 5,
+                        y + (i * CELL_SIZE) + 5,
+                        x + (j * CELL_SIZE) + 15,
+                        y + (i * CELL_SIZE) + 15
+                    );
+                }
+                if (cell = 2) {
+                    do Screen.drawCircle(x + (j * CELL_SIZE) + 10, y + (i * CELL_SIZE) + 10, 5);
+                }
+                if (cell = 3) {
+                    do Screen.drawLine(
+                        x + (j * CELL_SIZE) + 5,
+                        y + (i * CELL_SIZE) + 5,
+                        x + (j * CELL_SIZE) + 15,
+                        y + (i * CELL_SIZE) + 15
+                    );
+                    do Screen.drawLine(
+                        x + (j * CELL_SIZE) + 15,
+                        y + (i * CELL_SIZE) + 5,
+                        x + (j * CELL_SIZE) + 5,
+                        y + (i * CELL_SIZE) + 15
+                    );
+                }
+                let j = j + 1;
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method boolean isGameOver() {
+        return shipsRemaining = 0;
+    }
+
+    method boolean allShipsPlaced() {
+        return shipsPlaced = 5;
+    }
+
+    method void redrawCell(int boardX, int boardY, int row, int col, int length, boolean vertical) {
+        var int i, cell;
+        
+        let i = 0;
+        while (i < length) {
+            if (vertical) {
+                let cell = getCell(row + i, col);
+            } else {
+                let cell = getCell(row, col + i);
+            }
+            
+            if (cell = 1) {
+                do Screen.setColor(true);
+                if (vertical) {
+                    do Screen.drawRectangle(
+                        boardX + (col * CELL_SIZE) + 5,
+                        boardY + ((row + i) * CELL_SIZE) + 5,
+                        boardX + (col * CELL_SIZE) + 15,
+                        boardY + ((row + i) * CELL_SIZE) + 15
+                    );
+                } else {
+                    do Screen.drawRectangle(
+                        boardX + ((col + i) * CELL_SIZE) + 5,
+                        boardY + (row * CELL_SIZE) + 5,
+                        boardX + ((col + i) * CELL_SIZE) + 15,
+                        boardY + (row * CELL_SIZE) + 15
+                    );
+                }
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+
+    method void dispose() {
+        var int i;
+        var Array row;
+
+        let i = 0;
+        while (i < BOARD_SIZE) {
+            let row = grid[i];
+            do row.dispose();
+            let i = i + 1;
+        }
+        do grid.dispose();
+
+        let i = 0;
+        while (i < 5) {
+            if (~(ships[i] = null)) {
+                let row = ships[i];
+                do row.dispose();
+            }
+            let i = i + 1;
+        }
+        do ships.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

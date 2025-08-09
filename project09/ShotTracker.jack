@@ -1,0 +1,115 @@
+class ShotTracker {
+    static int CELL_SIZE;
+    static int MISS_RADIUS;
+    static int HIT_MARGIN;
+
+    field Array playerShots;
+    field Array computerShots;
+    field int boardSize;
+   
+    constructor ShotTracker new(int size) {
+        let CELL_SIZE = 20;
+        let MISS_RADIUS = 2;
+        let HIT_MARGIN = 5;
+        
+        let boardSize = size;
+        let playerShots = Array.new(boardSize * boardSize);
+        let computerShots = Array.new(boardSize * boardSize);
+        do initializeArrays();
+        return this;
+    }
+   
+    method void initializeArrays() {
+        var int i, totalCells;
+        let totalCells = boardSize * boardSize;
+        let i = 0;
+        while (i < totalCells) {
+            let playerShots[i] = 0;
+            let computerShots[i] = 0;
+            let i = i + 1;
+        }
+        return;
+    }
+   
+    method int calculateIndex(int row, int col) {
+        return (row * boardSize) + col;
+    }
+
+    method void recordPlayerShot(int row, int col, int result) {
+        let playerShots[calculateIndex(row, col)] = result + 1;
+        return;
+    }
+   
+    method void recordComputerShot(int row, int col, int result) {
+        let computerShots[calculateIndex(row, col)] = result + 1;
+        return;
+    }
+   
+    method boolean hasPlayerShot(int row, int col) {
+        return ~(playerShots[calculateIndex(row, col)] = 0);
+    }
+   
+    method boolean hasComputerShot(int row, int col) {
+        return ~(computerShots[calculateIndex(row, col)] = 0);
+    }
+   
+    method int getPlayerShotResult(int row, int col) {
+        return playerShots[calculateIndex(row, col)];
+    }
+   
+    method int getComputerShotResult(int row, int col) {
+        return computerShots[calculateIndex(row, col)];
+    }
+
+    method void drawShotMarker(int x, int y, int result) {
+        var int centerX, centerY;
+        let centerX = x + (CELL_SIZE / 2);
+        let centerY = y + (CELL_SIZE / 2);
+
+        if (result = 1) {
+            do Screen.drawCircle(centerX, centerY, MISS_RADIUS);
+        } else {
+            if (result = 2) {
+                do Screen.drawLine(x + HIT_MARGIN, y + HIT_MARGIN,
+                                 x + CELL_SIZE - HIT_MARGIN, y + CELL_SIZE - HIT_MARGIN);
+                do Screen.drawLine(x + CELL_SIZE - HIT_MARGIN, y + HIT_MARGIN,
+                                 x + HIT_MARGIN, y + CELL_SIZE - HIT_MARGIN);
+            }
+        }
+        return;
+    }
+   
+    method void redrawAllShots(int playerX, int playerY, int computerX, int computerY) {
+        var int i, row, col, result;
+        let i = 0;
+        while (i < (boardSize * boardSize)) {
+            let row = i / boardSize;
+            let col = Utils.mod(i, boardSize);
+            
+            do Screen.setColor(true);
+            if (~(playerShots[i] = 0)) {
+                do drawShotMarker(
+                    computerX + (col * CELL_SIZE),
+                    computerY + (row * CELL_SIZE),
+                    playerShots[i]
+                );
+            }
+            if (~(computerShots[i] = 0)) {
+                do drawShotMarker(
+                    playerX + (col * CELL_SIZE),
+                    playerY + (row * CELL_SIZE),
+                    computerShots[i]
+                );
+            }
+            let i = i + 1;
+        }
+        return;
+    }
+   
+    method void dispose() {
+        do playerShots.dispose();
+        do computerShots.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

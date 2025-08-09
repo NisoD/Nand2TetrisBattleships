@@ -1,0 +1,207 @@
+class Game {
+    static int BOARD_SIZE, CELL_SIZE;
+    static int PLAYER_X, PLAYER_Y;
+    static int COMPUTER_X, COMPUTER_Y;
+
+    field PlayerBoard playerBoard;
+    field PCBoard computerBoard;
+    field Array shipSizes;
+    field boolean gameOver;
+    field ShotTracker shotTracker;
+    
+    field int previewX, previewY, previewSize;
+    field boolean previewVertical;
+    
+    constructor Game new() {
+        let BOARD_SIZE = 10;
+        let CELL_SIZE = 20;
+        let PLAYER_X = 50;
+        let PLAYER_Y = 50;
+        let COMPUTER_X = 300;
+        let COMPUTER_Y = 50;
+        
+        let playerBoard = PlayerBoard.new(BOARD_SIZE, CELL_SIZE);
+        let computerBoard = PCBoard.new(BOARD_SIZE, CELL_SIZE);
+        let shotTracker = ShotTracker.new(BOARD_SIZE);
+        let gameOver = false;
+
+        let previewSize = 0;
+        let previewX = 0;
+        let previewY = 0;
+        let previewVertical = false;
+
+        do initializeShipSizes();
+        return this;
+    }
+
+    method void initializeShipSizes() {
+        let shipSizes = Array.new(5);
+        let shipSizes[0] = 5;
+        let shipSizes[1] = 4;
+        let shipSizes[2] = 3;
+        let shipSizes[3] = 3;
+        let shipSizes[4] = 2;
+        return;
+    }
+
+    method void drawPreview(int row, int col, int length, boolean vertical) {
+        var int startX, startY;
+        
+        let startX = PLAYER_X + (col * CELL_SIZE);
+        let startY = PLAYER_Y + (row * CELL_SIZE);
+        
+        if (previewSize > 0) {
+            do Screen.setColor(false);
+            if (previewVertical) {
+                do Screen.drawRectangle(
+                    previewX + 5,
+                    previewY + 5,
+                    previewX + 15,
+                    previewY + (previewSize * CELL_SIZE) - 5
+                );
+            } else {
+                do Screen.drawRectangle(
+                    previewX + 5,
+                    previewY + 5,
+                    previewX + (previewSize * CELL_SIZE) - 5,
+                    previewY + 15
+                );
+            }
+            do playerBoard.redrawCell(
+                PLAYER_X,
+                PLAYER_Y,
+                (previewY - PLAYER_Y) / CELL_SIZE,
+                (previewX - PLAYER_X) / CELL_SIZE,
+                previewSize,
+                previewVertical
+            );
+        }
+        
+        do Screen.setColor(true);
+        if (vertical) {
+            do Screen.drawRectangle(
+                startX + 5,
+                startY + 5,
+                startX + 15,
+                startY + (length * CELL_SIZE) - 5
+            );
+        } else {
+            do Screen.drawRectangle(
+                startX + 5,
+                startY + 5,
+                startX + (length * CELL_SIZE) - 5,
+                startY + 15
+            );
+        }
+        
+        let previewX = startX;
+        let previewY = startY;
+        let previewSize = length;
+        let previewVertical = vertical;
+        
+        return;
+    }
+
+    method void placeShips() {
+        var int currentShip, row, col, key;
+        var boolean vertical;
+        
+        let currentShip = 0;
+        let row = 0;
+        let col = 0;
+        let vertical = false;
+        
+        do Screen.clearScreen();
+        do playerBoard.draw(PLAYER_X, PLAYER_Y);
+        do Output.moveCursor(2, 6);
+        do Output.printString("Commander, Place Your Fleet! (Space), R to rotate");
+        
+        while ((currentShip < 5) & (~gameOver)) {
+            do drawPreview(row, col, shipSizes[currentShip], vertical);
+            
+            let key = Keyboard.keyPressed();
+            if (key > 0) {
+                if (key = 81) { let gameOver = true; }                    
+                if (key = 130) { if (col > 0) { let col = col - 1; } }   
+                if (key = 132) { if (col < 9) { let col = col + 1; } }   
+                if (key = 131) { if (row > 0) { let row = row - 1; } }   
+                if (key = 133) { if (row < 9) { let row = row + 1; } }   
+                if (key = 82) { let vertical = ~vertical; }              
+                
+                if (key = 32) {
+                    if (playerBoard.placeShip(row, col, shipSizes[currentShip], vertical)) {
+                        do playerBoard.drawShip(PLAYER_X, PLAYER_Y, row, col, shipSizes[currentShip], vertical);
+                        let currentShip = currentShip + 1;
+                        let row = 0;
+                        let col = 0;
+                        let vertical = false;
+                    }
+                }
+                
+                while (key = Keyboard.keyPressed()) {
+                    do Sys.wait(5);
+                }
+            }
+            do Sys.wait(50);
+        }
+        return;
+    }
+
+    method void battle() {
+        var BattleManager battleMgr;
+        let battleMgr = BattleManager.new(
+            playerBoard, computerBoard, 
+            PLAYER_X, PLAYER_Y, 
+            COMPUTER_X, COMPUTER_Y,
+            BOARD_SIZE, CELL_SIZE
+        );
+        
+        do battleMgr.run();
+        let gameOver = battleMgr.isGameOver();
+        do battleMgr.dispose();
+        return;
+    }
+
+    method void run() {
+        do placeShips();
+        if (~gameOver) {
+            do battle();
+        }
+        do endGame();
+        return;
+    }
+
+    method void endGame() {
+        do computerBoard.draw(COMPUTER_X, COMPUTER_Y, true);
+        
+        do Screen.setColor(false);
+        do Screen.drawRectangle(0, 15, 511, 35);
+        
+        do Screen.setColor(true);
+        do Output.moveCursor(2, 25);
+        
+        if (computerBoard.isGameOver()) {
+            do Output.printString("Victory!");
+            do Sys.wait(3000);
+        } else {
+            if (playerBoard.isGameOver()) {
+                do Output.printString("Defeat!");
+                do Sys.wait(3000);
+            } else {
+                do Output.printString("Mission Aborted");
+            }
+        }
+        
+        do Sys.wait(3000);
+        return;
+    }
+
+    method void dispose() {
+        do playerBoard.dispose();
+        do computerBoard.dispose();
+        do shipSizes.dispose();
+        do shotTracker.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

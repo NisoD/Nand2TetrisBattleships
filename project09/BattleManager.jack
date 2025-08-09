@@ -1,0 +1,182 @@
+class BattleManager {
+    field PlayerBoard playerBoard;
+    field PCBoard computerBoard;
+    field int playerX, playerY, computerX, computerY;
+    field int boardSize, cellSize;
+    field boolean gameOver;
+    field TargetCursor cursor;
+    field ShotTracker shotTracker;
+    
+    constructor BattleManager new(PlayerBoard pb, PCBoard cb, 
+                                int px, int py, int cx, int cy,
+                                int bSize, int cSize) {
+        let playerBoard = pb;
+        let computerBoard = cb;
+        let playerX = px;
+        let playerY = py;
+        let computerX = cx;
+        let computerY = cy;
+        let boardSize = bSize;
+        let cellSize = cSize;
+        let gameOver = false;
+        let cursor = TargetCursor.new(computerX, computerY, cellSize, computerBoard);
+        let shotTracker = ShotTracker.new(boardSize);
+        
+        do initializeScreen();
+        return this;
+    }
+    
+    method void initializeScreen() {
+        do Screen.clearScreen();
+        do playerBoard.draw(playerX, playerY);
+        do computerBoard.draw(computerX, computerY, false);
+        do Output.moveCursor(1, 5);
+        do Output.printString("Fire at Will!(Space) ,R to reset, Q to abandon");
+        do Output.moveCursor(3, 13);
+        do Output.printString("Player Board");
+        do Output.moveCursor(3, 43);
+        do Output.printString("Computer Board");
+
+        return;
+    }
+    
+    method void handlePlayerTurn() { 
+        var int row, col, result;
+        var boolean targetSelected;
+
+        let targetSelected = false;
+        while (~targetSelected & (~gameOver)) {
+            do cursor.update();
+
+            if (cursor.isActionPressed()) {
+                let row = cursor.getRow();
+                let col = cursor.getCol();
+
+                if (isValidPlayerShot(row, col)) {
+                    let result = computerBoard.receiveShot(row, col);
+                    do computerBoard.renderShot(computerX, computerY, row, col, result);
+                    do shotTracker.recordPlayerShot(row, col, result);
+                    let targetSelected = true;
+                    let gameOver = computerBoard.isGameOver();
+                }
+            }
+
+            if (cursor.isQuitPressed()) {
+                let gameOver = true;
+            }
+
+            do Sys.wait(50);
+        }
+        return;
+    }
+
+    method boolean isValidPlayerShot(int row, int col) {
+        return (computerBoard.isValidShot(row, col)) &
+               (~(shotTracker.hasPlayerShot(row, col)));
+    }
+
+    method void handleComputerTurn() {
+        var int row, col, result;
+        var Array availableShots;
+        var int remainingShots, shotIndex;
+        
+        let availableShots = generateAvailableShots();
+        let remainingShots = getRemainingShots();
+        
+        if (remainingShots = 0) {
+            let gameOver = true;
+            return;
+        }
+        
+        let shotIndex = Random.randRange(0, remainingShots - 1);
+        let row = availableShots[shotIndex * 2];
+        let col = availableShots[shotIndex * 2 + 1];
+        
+        let result = playerBoard.receiveShot(row, col);
+        do playerBoard.updateCell(playerX, playerY, row, col, result);
+        do shotTracker.recordComputerShot(row, col, result);
+        let gameOver = playerBoard.isGameOver();
+        
+        do availableShots.dispose();
+        do Sys.wait(200);
+        return;
+    }
+    
+    method Array generateAvailableShots() {
+        var Array shots;
+        var int count, i, j, index;
+        
+        let count = getRemainingShots();
+        let shots = Array.new(count * 2);
+        let index = 0;
+        
+        let i = 0;
+        while (i < boardSize) {
+            let j = 0;
+            while (j < boardSize) {
+                if (isValidComputerShot(i, j)) {
+                    let shots[index * 2] = i;
+                    let shots[index * 2 + 1] = j;
+                    let index = index + 1;
+                }
+                let j = j + 1;
+            }
+            let i = i + 1;
+        }
+        
+        return shots;
+    }
+    
+    method int getRemainingShots() {
+        var int count, i, j;
+        
+        let count = 0;
+        let i = 0;
+        while (i < boardSize) {
+            let j = 0;
+            while (j < boardSize) {
+                if (isValidComputerShot(i, j)) {
+                    let count = count + 1;
+                }
+                let j = j + 1;
+            }
+            let i = i + 1;
+        }
+        
+        return count;
+    }
+
+    method boolean isValidComputerShot(int row, int col) {
+        if ((row < 0) | (col < 0)) { return false; }
+        if ((row > (boardSize - 1)) | (col > (boardSize - 1))) { return false; }
+        
+        return (~(shotTracker.hasComputerShot(row, col))) & 
+               (playerBoard.isValidShot(row, col));
+    }
+    
+    method void run() {
+        var boolean playerTurn;
+        let playerTurn = true;
+        
+        while (~gameOver) {
+            if (playerTurn) {
+                do handlePlayerTurn();
+            } else {
+                do handleComputerTurn();
+            }
+            let playerTurn = ~playerTurn;
+        }
+        return;
+    }
+    
+    method boolean isGameOver() {
+        return gameOver;
+    }
+    
+    method void dispose() {
+        do cursor.dispose();
+        do shotTracker.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

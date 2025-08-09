@@ -1,0 +1,9 @@
+class Utils {
+    function int mod(int a, int b) {
+        var int quotient;
+        var int remainder;
+        let quotient = a / b;
+        let remainder = a - (quotient * b);
+        return remainder;
+    }
+}
